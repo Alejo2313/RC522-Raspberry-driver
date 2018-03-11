@@ -10,7 +10,9 @@ int main(void){
 	uint8_t ID[16];
 	int n, i;
 	printf("hello world \n");
-	RC522_Init();
+	if(RC522_Init() == STATUS_ERROR)
+		return 1;
+
 	//while(1){}
 	printf("REG: %d \n ", RC522_ReadRegister(MFRC522_REG_T_RELOAD_L));
 	while(1){

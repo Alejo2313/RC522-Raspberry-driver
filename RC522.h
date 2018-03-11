@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include "wiringPi.h"
 #include "wiringPiSPI.h"
-
+#include "bcm2835.h"
 #include "defines.h"
 
 /*defines*/
@@ -29,6 +29,13 @@
 #define DEFAULT_SPEED			4000000     //by default, use 4MHz
 #define CUSTOM_SPEED			500000	    // in the range 500KHz through 32MHz
 
+/*UART*/
+#define serial0						0
+#define serial1						1
+
+//speed
+
+#define DEFAUL_BAUDRATE			96000
 
 
 
@@ -140,7 +147,7 @@ typedef enum{
 /*variable*/
 
 /*functions */
-extern void RC522_Init(void);
+extern Status_t RC522_Init(void);
 extern Status_t RC522_Check(uint8_t* id) ;
 extern void RC522_WriteRegister(uint8_t addr, uint8_t val);
 extern uint8_t RC522_ReadRegister(uint8_t addr);
@@ -158,5 +165,6 @@ extern Status_t RC522_Auth(uint8_t authMode, uint8_t BlockAddr, uint8_t* Sectork
 extern Status_t RC522_Read(uint8_t blockAddr, uint8_t* recvData);
 extern Status_t RC522_Write(uint8_t blockAddr, uint8_t* writeData);
 extern void RC522_Halt(void);
+extern Status_t bcm_spi_init();
 #endif /* RC522_H_ */
 

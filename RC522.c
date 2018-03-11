@@ -10,10 +10,14 @@
 
 const uint8_t antenna_Gain[] = {18, 23, 18, 23, 33,38,43,48};
 
-void RC522_Init(void) {
+Status_t RC522_Init(void) {
+	Status_t state = STATUS_OK;
 	#ifdef SPI_DEV
 	 printf("Setup: %d \n",wiringPiSPISetup(spidev0, DEFAULT_SPEED));
 
+	#endif
+    #ifdef bcm_spi
+	 state = bcm_spi_init();
 	#endif
 
 	RC522_Reset();
@@ -28,6 +32,7 @@ void RC522_Init(void) {
 	RC522_WriteRegister(MFRC522_REG_MODE, 0x3D);
 
 	RC522_AntennaOn();
+	return state;
 }
 
 
@@ -55,6 +60,11 @@ void RC522_WriteRegister(uint8_t addr, uint8_t val) {
 		buffer[1] = val;
 		wiringPiSPIDataRW(spidev0,buffer,2);
 	#endif
+	#ifdef bcm_spi
+		buffer[0] = (addr << 1) & 0x7E;
+		buffer[1] = val;
+		bcm2835_spi_transfern(buffer, 2);
+	#endif
 }
 
 
@@ -64,6 +74,9 @@ uint8_t RC522_ReadRegister(uint8_t addr) {
 	buffer[1]= 0x00;
 	#ifdef SPI_DEV
 		wiringPiSPIDataRW(spidev0, buffer, 2);
+	#endif
+	#ifdef bcm_spi
+		bcm2835_spi_transfern(buffer, 2);
 	#endif
 	return buffer[1];
 }
@@ -369,3 +382,21 @@ void RC522_Halt(void) {
 	RC522_ToCard(PCD_TRANSCEIVE, buff, 4, buff, &unLen);
 }
 
+Status_t bcm_spi_init(){
+    if (!bcm2835_init())
+    {
+      printf("failed!. Are you root??\n");
+      return STATUS_ERROR;
+    }
+    if (!bcm2835_spi_begin())
+    {
+      printf("failed! Are you root??\n");
+      return STATUS_ERROR;
+    }
+    bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);      //  default
+    bcm2835_spi_setDataMode(BCM2835_SPI_MODE0);                   // Sets the clock polariy and phase. CPOL = 0, CPHA = 0
+    bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_64 );   // 64 = 3.90625MHz on Rpi2, 6.250MHz on RPI3
+    bcm2835_spi_chipSelect(BCM2835_SPI_CS0);                      //  default
+    bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS0, LOW);      //  default
+    return STATUS_OK;
+}

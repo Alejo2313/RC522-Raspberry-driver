@@ -9,7 +9,7 @@
 #define SCR_DEFINES_H_
 
 
-#define SPI_DEV
+#define bcm_spi
 
 
 #endif /* SCR_DEFINES_H_ */
